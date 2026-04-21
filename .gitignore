@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+backend/__pycache__/
+*.pyc
+venv/
+.env
+
+# Build outputs
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
