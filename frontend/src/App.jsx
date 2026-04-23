@@ -12,6 +12,7 @@ function App() {
   const [lastDisproof, setLastDisproof] = useState(null);
   const [logs, setLogs] = useState([]);
   const addLog = (text) => setLogs(prev => [text, ...prev].slice(0, 50));
+  const [gameOver, setGameOver] = useState(null);
   const [selectedSuspect, setSelectedSuspect] = useState(SUSPECTS[0]);
   const [selectedWeapon, setSelectedWeapon] = useState(WEAPONS[0]);
 
@@ -54,7 +55,7 @@ function App() {
         addLog(`Suggestion could not be disproved!`);
       } else if (msg.type === "GAME_OVER") {
         addLog(`GAME OVER! ${msg.winner} won!`);
-        alert(`Game Over! Winner: ${msg.winner}. Solution: ${msg.solution.suspect} in the ${msg.solution.room} with the ${msg.solution.weapon}`);
+        setGameOver({ winner: msg.winner, solution: msg.solution });
       }
     });
     setSocket(ws);
@@ -87,6 +88,26 @@ function App() {
             <input value={roomIdInput} onChange={e => setRoomIdInput(e.target.value)} placeholder="Room Code" />
             <button onClick={handleJoin}>Join</button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameOver) {
+    return (
+      <div className="app-container">
+        <div className="card fade-in" style={{ textAlign: 'center', maxWidth: '500px', margin: 'auto' }}>
+          <h1 style={{ color: 'var(--primary)' }}>🏆 Game Over!</h1>
+          <h2 style={{ marginBottom: '2rem' }}>{gameOver.winner === user ? "You Won!" : `${gameOver.winner} Won!`}</h2>
+          
+          <div className="card" style={{ background: 'var(--bg-dark)', marginBottom: '2rem' }}>
+            <h3>The Solution Was:</h3>
+            <p style={{ fontSize: '1.2rem', color: 'var(--primary)' }}>
+              <strong>{gameOver.solution.suspect}</strong> in the <strong>{gameOver.solution.room}</strong> with the <strong>{gameOver.solution.weapon}</strong>
+            </p>
+          </div>
+
+          <button onClick={() => window.location.reload()} style={{ width: '100%' }}>Play Again</button>
         </div>
       </div>
     );
