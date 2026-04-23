@@ -128,13 +128,19 @@ function App() {
     );
   }
 
+  const myCharacter = gameState.game_data.player_characters[user];
+
   return (
     <div className="app-container">
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem' }}>
         <div className="card fade-in">
-          <h2>Detective Board</h2>
-          <div style={{ marginBottom: '1rem' }}>
-            <strong>Turn:</strong> {gameState.game_data.turn_order[gameState.game_data.current_turn_index]}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2>Detective Board</h2>
+            <div className="badge">{myCharacter}</div>
+          </div>
+          
+          <div style={{ marginBottom: '1.5rem', padding: '10px', background: 'var(--bg-dark)', borderRadius: '8px' }}>
+            <strong>Current Turn:</strong> {gameState.game_data.turn_order[gameState.game_data.current_turn_index]}
           </div>
           
           <div className="board-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
