@@ -4,65 +4,71 @@ from ..constants import SUSPECTS, WEAPONS, ROOMS
 
 class GameLogic:
     @staticmethod
-    def initialize_game(players: List[str]) -> Dict:
+    def initialize_game(players: List[str], player_characters: Dict[str, str]) -> Dict:
         """
         Initializes the game state by selecting a solution and dealing cards.
         """
-        from ..constants import SUSPECT_NAMES
-        suspect_pool = SUSPECT_NAMES.copy()
-        weapons = WEAPONS.copy()
-        rooms = ROOMS.copy()
-
-        # Assign characters to players
-        player_characters = {}
-        shuffled_suspects = SUSPECT_NAMES.copy()
-        random.shuffle(shuffled_suspects)
-        for i, player in enumerate(players):
-            player_characters[player] = shuffled_suspects[i]
-
-        # Select solution
-        solution_suspect = random.choice(SUSPECT_NAMES)
-        solution_weapon = random.choice(weapons)
-        solution_room = random.choice(rooms)
-
-        solution = {
-            "suspect": solution_suspect,
-            "weapon": solution_weapon,
-            "room": solution_room
-        }
-
-        # Remove solution from pool for dealing
-        # (Suspects in cards are independent of players)
-        dealing_suspects = [s for s in SUSPECT_NAMES if s != solution_suspect]
-        dealing_weapons = [w for w in weapons if w != solution_weapon]
-        dealing_rooms = [r for r in rooms if r != solution_room]
-
-        # Combine remaining cards
-        all_cards = dealing_suspects + dealing_weapons + dealing_rooms
-        random.shuffle(all_cards)
-
-        # Distribute cards to players
-        num_players = len(players)
-        player_cards = {player: [] for player in players}
+        print(f"DEBUG: Initializing game for players: {players}")
+        from ..constants import SUSPECT_NAMES, WEAPONS, ROOMS, STARTING_POSITIONS
         
-        for i, card in enumerate(all_cards):
-            player_cards[players[i % num_players]].append(card)
+        try:
+            # Select solution
+            solution_suspect = random.choice(SUSPECT_NAMES)
+            solution_weapon = random.choice(WEAPONS)
+            solution_room = random.choice(ROOMS)
 
-        # Randomize player order
-        turn_order = players.copy()
-        random.shuffle(turn_order)
+            solution = {
+                "suspect": solution_suspect,
+                "weapon": solution_weapon,
+                "room": solution_room
+            }
+            print(f"DEBUG: Solution selected: {solution}")
 
-        return {
-            "solution": solution,
-            "player_cards": player_cards,
-            "player_characters": player_characters,
-            "turn_order": turn_order,
-            "current_turn_index": 0,
-            "status": "ongoing",
-            "winner": None,
-            "history": [],
-            "player_positions": {player: "Hall" for player in players} # Start in Hall
-        }
+            # Remove solution from pool for dealing
+            dealing_suspects = [s for s in SUSPECT_NAMES if s != solution_suspect]
+            dealing_weapons = [w for w in WEAPONS if w != solution_weapon]
+            dealing_rooms = [r for r in ROOMS if r != solution_room]
+
+            # Combine remaining cards
+            all_cards = dealing_suspects + dealing_weapons + dealing_rooms
+            random.shuffle(all_cards)
+
+            # Distribute cards to players
+            num_players = len(players)
+            player_cards = {player: [] for player in players}
+            
+            for i, card in enumerate(all_cards):
+                player_cards[players[i % num_players]].append(card)
+
+            # Setup positions
+            player_positions = {}
+            for player, character in player_characters.items():
+                player_positions[player] = STARTING_POSITIONS.get(character, (0, 0))
+
+            # Randomize player order
+            turn_order = players.copy()
+            random.shuffle(turn_order)
+
+            state = {
+                "solution": solution,
+                "player_cards": player_cards,
+                "player_characters": player_characters,
+                "turn_order": turn_order,
+                "current_turn_index": 0,
+                "status": "ongoing",
+                "winner": None,
+                "history": [],
+                "player_positions": player_positions,
+                "last_roll": None,
+                "moved_this_turn": False
+            }
+            print("DEBUG: Game state initialized successfully")
+            return state
+        except Exception as e:
+            print(f"ERROR in initialize_game: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise e
 
     @staticmethod
     def roll_dice() -> int:
