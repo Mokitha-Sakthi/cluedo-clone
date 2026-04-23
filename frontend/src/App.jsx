@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { createRoom, joinRoom, GameSocket } from './services';
-import { SUSPECTS, WEAPONS } from './constants';
+import { SUSPECTS, WEAPONS, ROOM_BOUNDARIES } from './constants';
 import './index.css';
+
+const SUSPECT_DATA = {
+  "Miss Scarlett": { color: "#E53935", icon: "💃" },
+  "Colonel Mustard": { color: "#FDD835", icon: "🎖️" },
+  "Mrs. White": { color: "#FAFAFA", icon: "🧹" },
+  "Mr. Green": { color: "#43A047", icon: "💵" },
+  "Mrs. Peacock": { color: "#1E88E5", icon: "🦚" },
+  "Professor Plum": { color: "#8E24AA", icon: "🎓" }
+};
 
 function App() {
   const [user, setUser] = useState(localStorage.getItem('cluedo_user') || '');
@@ -15,6 +24,16 @@ function App() {
   const [gameOver, setGameOver] = useState(null);
   const [selectedSuspect, setSelectedSuspect] = useState(SUSPECTS[0]);
   const [selectedWeapon, setSelectedWeapon] = useState(WEAPONS[0]);
+  const [characterPickerOpen, setCharacterPickerOpen] = useState(true);
+  const [showEnvelope, setShowEnvelope] = useState(false);
+
+  useEffect(() => {
+    if (gameState?.status === 'ongoing') {
+      setShowEnvelope(true);
+      const timer = setTimeout(() => setShowEnvelope(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState?.status]);
 
   useEffect(() => {
     if (user) localStorage.setItem('cluedo_user', user);
@@ -62,8 +81,14 @@ function App() {
   };
 
   const setReady = () => socket.send("READY");
+  const startGame = () => {
+    console.log("START GAME button clicked");
+    socket.send("START_GAME");
+  };
+  const selectChar = (char) => socket.send("SELECT_CHARACTER", { character: char });
   const rollDice = () => socket.send("ROLL_DICE");
-  const move = (roomName) => socket.send("MOVE", { room: roomName });
+  const move = (pos) => socket.send("MOVE", { position: pos });
+  const endTurn = () => socket.send("END_TURN");
   const suggest = () => {
     const r = gameState.game_data.player_positions[user];
     socket.send("SUGGESTION", { suspect: selectedSuspect, weapon: selectedWeapon, room: r });
@@ -113,60 +138,215 @@ function App() {
     );
   }
 
-  if (gameState?.status === 'waiting') {
+  if (!gameState) {
     return (
       <div className="app-container">
-        <div className="card fade-in" style={{ maxWidth: '400px', margin: 'auto', textAlign: 'center' }}>
-          <h2>Room: {room.room_id}</h2>
-          <button 
-            style={{ fontSize: '10px', padding: '5px 10px', background: 'var(--bg-dark)', color: 'white', marginBottom: '1.5rem' }}
-            onClick={() => {
-              navigator.clipboard.writeText(room.room_id);
-              alert("Room ID copied!");
-            }}
-          >
-            📋 Copy Room ID
-          </button>
-          <p style={{ marginBottom: '1rem' }}>Players: {gameState.players.join(', ')}</p>
-          <p style={{ marginBottom: '1.5rem' }}>Ready: {gameState.ready_players.length} / {gameState.players.length}</p>
-          <button onClick={setReady} disabled={gameState.ready_players.includes(user)} style={{ width: '100%' }}>
-            {gameState.ready_players.includes(user) ? "Ready!" : "Ready Up"}
-          </button>
+        <div className="card fade-in" style={{ textAlign: 'center', maxWidth: '400px', margin: 'auto' }}>
+          <h2>Joining Room...</h2>
+          <div className="spinner"></div>
         </div>
       </div>
     );
   }
 
-  const myCharacter = gameState.game_data.player_characters[user];
+
+  if (gameState?.status === 'waiting') {
+    const players = gameState.players || [];
+    const readyPlayers = gameState.ready_players || [];
+    const selections = gameState.selected_characters || {};
+    const mySelection = selections[user];
+
+    return (
+      <div className="app-container">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start' }}>
+          <div className="card fade-in">
+            <h2 style={{ marginBottom: '1.5rem' }}>Choose Your Character</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+              {Object.entries(SUSPECT_DATA).map(([name, data]) => {
+                const isTaken = Object.values(selections).includes(name);
+                const isMine = mySelection === name;
+                const takenBy = Object.entries(selections).find(([uid, char]) => char === name)?.[0];
+
+                return (
+                  <div 
+                    key={name}
+                    className={`char-card ${isMine ? 'selected' : ''} ${isTaken && !isMine ? 'taken' : ''}`}
+                    style={{ '--char-color': data.color }}
+                    onClick={() => !isTaken && selectChar(name)}
+                  >
+                    <div className="char-icon">{data.icon}</div>
+                    <div className="char-name">{name}</div>
+                    {isTaken && <div className="taken-tag">{isMine ? 'YOU' : takenBy}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="card fade-in">
+            <h3>Lobby: {room.room_id}</h3>
+            <div style={{ margin: '1rem 0' }}>
+              <button 
+                className="btn-secondary"
+                style={{ width: '100%', fontSize: '12px' }}
+                onClick={() => {
+                  navigator.clipboard.writeText(room.room_id);
+                  alert("Room ID copied!");
+                }}
+              >
+                📋 Copy Room ID
+              </button>
+            </div>
+
+            <div style={{ marginTop: '1.5rem' }}>
+              <h4 style={{ marginBottom: '1rem', color: 'var(--text-dim)' }}>Players ({players.length}/6)</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {players.map(p => (
+                  <div key={p} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '0.75rem',
+                    background: 'var(--bg-dark)',
+                    borderRadius: '0.5rem',
+                    border: p === user ? '1px solid var(--primary)' : 'none'
+                  }}>
+                    <span>{p === user ? `✨ ${p}` : p}</span>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      {selections[p] && <span style={{ fontSize: '12px', color: SUSPECT_DATA[selections[p]].color }}>{selections[p]}</span>}
+                      {readyPlayers.includes(p) ? 
+                        <span style={{ color: '#4ade80' }}>✓</span> : 
+                        <span style={{ color: 'var(--text-dim)' }}>...</span>
+                      }
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '2rem' }}>
+              {!readyPlayers.includes(user) ? (
+                <button 
+                  onClick={setReady} 
+                  disabled={!mySelection} 
+                  style={{ width: '100%', height: '60px', fontSize: '1.2rem' }}
+                >
+                  {mySelection ? "I'M READY" : "SELECT CHARACTER"}
+                </button>
+              ) : gameState.creator_id === user ? (
+                <button 
+                  onClick={startGame} 
+                  disabled={readyPlayers.length < players.length || players.length < 2} 
+                  style={{ width: '100%', height: '60px', fontSize: '1.2rem', background: 'var(--accent)' }}
+                >
+                  {readyPlayers.length < players.length ? "WAITING FOR OTHERS..." : players.length < 2 ? "NEED MORE PLAYERS" : "START GAME 🎬"}
+                </button>
+              ) : (
+                <button 
+                  disabled 
+                  style={{ width: '100%', height: '60px', fontSize: '1.2rem', background: 'var(--bg-dark)', color: 'var(--text-dim)' }}
+                >
+                  READY! (Wait for host)
+                </button>
+              )}
+              <p style={{ fontSize: '12px', color: 'var(--text-dim)', textAlign: 'center', marginTop: '0.5rem' }}>
+                {gameState.creator_id === user ? "You are the host" : `Host: ${gameState.creator_id}`}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const myCharacter = gameState.game_data?.player_characters?.[user];
+  const characterInfo = SUSPECT_DATA[myCharacter] || { color: 'var(--primary)', icon: '🕵️' };
 
   return (
     <div className="app-container">
+      {showEnvelope && (
+        <div className="envelope-overlay">
+          <div className="envelope">
+            <div className="card-back person">👤</div>
+            <div className="card-back weapon">🔪</div>
+            <div className="card-back room">🏠</div>
+            <div className="envelope-front">SECRET</div>
+          </div>
+          <h2 className="envelope-text">Confidential Solution Hidden...</h2>
+        </div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem' }}>
         <div className="card fade-in">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2>Detective Board</h2>
-            <div className="badge">{myCharacter}</div>
+            <div className="badge" style={{ background: characterInfo.color, color: myCharacter === 'Mrs. White' ? 'black' : 'white' }}>
+              {characterInfo.icon} {myCharacter}
+            </div>
           </div>
           
-          <div style={{ marginBottom: '1.5rem', padding: '10px', background: 'var(--bg-dark)', borderRadius: '8px' }}>
-            <strong>Current Turn:</strong> {gameState.game_data.turn_order[gameState.game_data.current_turn_index]}
-          </div>
-          
-          <div className="board-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {["Kitchen", "Ballroom", "Conservatory", "Dining Room", "Billiard Room", "Library", "Lounge", "Hall", "Study"].map(r => (
-              <div key={r} className="card" style={{ 
-                textAlign: 'center', 
-                border: gameState.game_data.player_positions[user] === r ? '2px solid var(--primary)' : ''
-              }}>
-                {r}
-                <br/>
-                <button size="small" onClick={() => move(r)} style={{ padding: '2px 5px', fontSize: '10px' }}>Go</button>
-              </div>
-            ))}
+          <div className="current-turn-banner" style={{ background: gameState.game_data.turn_order[gameState.game_data.current_turn_index] === user ? 'var(--primary)' : 'var(--bg-dark)' }}>
+            <span style={{ color: gameState.game_data.turn_order[gameState.game_data.current_turn_index] === user ? 'black' : 'white' }}>
+              {gameState.game_data.turn_order[gameState.game_data.current_turn_index] === user ? "⭐ YOUR TURN" : `Waiting for ${gameState.game_data.turn_order[gameState.game_data.current_turn_index]}...`}
+            </span>
           </div>
 
-          <div style={{ marginTop: '2rem' }}>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+          <div className="board-container" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="tile-grid">
+              {Array.from({ length: 25 * 25 }).map((_, i) => {
+                const r = Math.floor(i / 25);
+                const c = i % 25;
+                
+                const isRoom = Object.entries(ROOM_BOUNDARIES).find(([name, b]) => 
+                  r >= b.top && r <= b.bottom && c >= b.left && c <= b.right
+                );
+                
+                // Check if any player is at this position
+                const playersHere = Object.entries(gameState.game_data.player_positions).filter(([uid, pos]) => 
+                  Array.isArray(pos) && pos[0] === r && pos[1] === c
+                );
+                
+                const isCurrentTurn = gameState.game_data.turn_order[gameState.game_data.current_turn_index] === user;
+                const canMove = isCurrentTurn && gameState.game_data.last_roll && !gameState.game_data.moved_this_turn;
+                
+                let isReachable = false;
+                if (canMove) {
+                  const myPos = gameState.game_data.player_positions[user];
+                  if (Array.isArray(myPos)) {
+                    const dist = Math.abs(myPos[0] - r) + Math.abs(myPos[1] - c);
+                    isReachable = dist > 0 && dist <= gameState.game_data.last_roll;
+                  }
+                }
+
+                return (
+                  <div 
+                    key={i} 
+                    className={`tile ${isRoom ? 'room-tile' : ''} ${isReachable ? 'reachable' : ''}`}
+                    style={{ 
+                      backgroundColor: isRoom ? `${isRoom[1].color}44` : 'transparent',
+                    }}
+                    onClick={() => isReachable && move([r, c])}
+                  >
+                    {playersHere.map(([uid, _]) => {
+                      const charName = gameState.game_data.player_characters[uid];
+                      const info = SUSPECT_DATA[charName] || { icon: '🕵️', color: 'white' };
+                      return (
+                        <div key={uid} className="token" style={{ background: info.color }} title={uid}>
+                          {info.icon}
+                        </div>
+                      );
+                    })}
+                    {isRoom && (r === isRoom[1].top && c === isRoom[1].left) && (
+                      <span className="room-label">{isRoom[0]}</span>
+                    )}
+                  </div>
+                );
+              })}
+              <div className="center-logo">CLUE</div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
               <select value={selectedSuspect} onChange={e => setSelectedSuspect(e.target.value)}>
                 {SUSPECTS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -174,9 +354,24 @@ function App() {
                 {WEAPONS.map(w => <option key={w} value={w}>{w}</option>)}
               </select>
             </div>
-            <button onClick={rollDice}>Roll Dice</button>
-            <button onClick={suggest} style={{ marginLeft: '10px' }}>Suggest</button>
-            <button onClick={accuse} style={{ marginLeft: '10px', background: 'var(--accent)' }}>Accuse</button>
+            
+            {!gameState.game_data.last_roll && (
+              <button onClick={rollDice} disabled={gameState.game_data.turn_order[gameState.game_data.current_turn_index] !== user}>
+                🎲 Roll Dice
+              </button>
+            )}
+            
+            {gameState.game_data.last_roll && !gameState.game_data.moved_this_turn && (
+              <div className="dice-badge">Rolled: {gameState.game_data.last_roll}</div>
+            )}
+
+            {gameState.game_data.moved_this_turn && (
+              <>
+                <button onClick={suggest} style={{ background: 'var(--primary)', color: 'black' }}>Suggest</button>
+                <button onClick={accuse} style={{ background: 'var(--accent)' }}>Accuse</button>
+                <button onClick={endTurn} className="btn-secondary">End Turn</button>
+              </>
+            )}
           </div>
         </div>
 
