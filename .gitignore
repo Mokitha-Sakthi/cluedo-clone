@@ -1,18 +1,25 @@
-# Dependencies
-node_modules/
-backend/__pycache__/
-*.pyc
-venv/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 .env
-
-# Build outputs
-dist/
+.venv
+venv/
+ENV/
 build/
+dist/
 
-# IDEs
+# Node
+node_modules/
+frontend/dist/
+.eslintcache
+
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
