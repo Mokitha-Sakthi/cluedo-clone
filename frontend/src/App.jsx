@@ -116,11 +116,20 @@ function App() {
   if (gameState?.status === 'waiting') {
     return (
       <div className="app-container">
-        <div className="card fade-in">
+        <div className="card fade-in" style={{ maxWidth: '400px', margin: 'auto', textAlign: 'center' }}>
           <h2>Room: {room.room_id}</h2>
-          <p>Players: {gameState.players.join(', ')}</p>
-          <p>Ready: {gameState.ready_players.length} / {gameState.players.length}</p>
-          <button onClick={setReady} disabled={gameState.ready_players.includes(user)}>
+          <button 
+            style={{ fontSize: '10px', padding: '5px 10px', background: 'var(--bg-dark)', color: 'white', marginBottom: '1.5rem' }}
+            onClick={() => {
+              navigator.clipboard.writeText(room.room_id);
+              alert("Room ID copied!");
+            }}
+          >
+            📋 Copy Room ID
+          </button>
+          <p style={{ marginBottom: '1rem' }}>Players: {gameState.players.join(', ')}</p>
+          <p style={{ marginBottom: '1.5rem' }}>Ready: {gameState.ready_players.length} / {gameState.players.length}</p>
+          <button onClick={setReady} disabled={gameState.ready_players.includes(user)} style={{ width: '100%' }}>
             {gameState.ready_players.includes(user) ? "Ready!" : "Ready Up"}
           </button>
         </div>
