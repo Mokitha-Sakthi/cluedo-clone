@@ -10,6 +10,8 @@ function App() {
   const [gameState, setGameState] = useState(null);
   const [socket, setSocket] = useState(null);
   const [lastDisproof, setLastDisproof] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const addLog = (text) => setLogs(prev => [text, ...prev].slice(0, 50));
   const [selectedSuspect, setSelectedSuspect] = useState(SUSPECTS[0]);
   const [selectedWeapon, setSelectedWeapon] = useState(WEAPONS[0]);
 
@@ -36,11 +38,22 @@ function App() {
       console.log("WS Msg:", msg);
       if (msg.type === "STATE_UPDATE" || msg.type === "PLAYER_JOINED") {
         setGameState(msg.state);
+        if (msg.type === "PLAYER_JOINED") addLog(`${msg.user_id} joined the room`);
       } else if (msg.type === "DISPROOF_CARD") {
         setLastDisproof(msg);
+        addLog(`You saw ${msg.card} from ${msg.by}`);
       } else if (msg.type === "DICE_ROLLED") {
-        alert(`${msg.user_id} rolled a ${msg.roll}`);
+        addLog(`${msg.user_id} rolled a ${msg.roll}`);
+      } else if (msg.type === "PLAYER_MOVED") {
+        addLog(`${msg.user_id} moved to ${msg.room}`);
+      } else if (msg.type === "SUGGESTION_MADE") {
+        addLog(`${msg.user_id} suggested ${msg.suspect} in the ${msg.room} with the ${msg.weapon}`);
+      } else if (msg.type === "SUGGESTION_DISPROVED") {
+        addLog(`Suggestion disproved by ${msg.by}`);
+      } else if (msg.type === "SUGGESTION_NOT_DISPROVED") {
+        addLog(`Suggestion could not be disproved!`);
       } else if (msg.type === "GAME_OVER") {
+        addLog(`GAME OVER! ${msg.winner} won!`);
         alert(`Game Over! Winner: ${msg.winner}. Solution: ${msg.solution.suspect} in the ${msg.solution.room} with the ${msg.solution.weapon}`);
       }
     });
@@ -141,7 +154,21 @@ function App() {
           </div>
           <div style={{ marginTop: '1.5rem' }}>
             <strong>Notebook:</strong>
-            <textarea style={{ width: '100%', height: '150px', background: 'var(--bg-dark)', color: 'white', padding: '10px' }} placeholder="Notes..."></textarea>
+            <textarea style={{ width: '100%', height: '100px', background: 'var(--bg-dark)', color: 'white', padding: '10px' }} placeholder="Notes..."></textarea>
+          </div>
+          <div style={{ marginTop: '1.5rem' }}>
+            <strong>Game Log:</strong>
+            <div style={{ 
+              height: '150px', 
+              overflowY: 'auto', 
+              fontSize: '12px', 
+              background: 'var(--bg-dark)', 
+              padding: '10px',
+              marginTop: '5px',
+              border: '1px solid var(--border)'
+            }}>
+              {logs.map((log, i) => <div key={i} style={{ marginBottom: '4px' }}>• {log}</div>)}
+            </div>
           </div>
           {lastDisproof && (
             <div style={{ marginTop: '1rem', color: 'var(--primary)' }}>
