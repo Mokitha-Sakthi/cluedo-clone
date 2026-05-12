@@ -211,66 +211,85 @@ select {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Game Board Styling - 25x25 Tile Grid */
+/* Game Board Styling */
 .tile-grid {
   display: grid;
-  grid-template-columns: repeat(25, 1fr);
-  grid-template-rows: repeat(25, 1fr);
+  grid-template-columns: repeat(24, 1fr);
+  grid-template-rows: repeat(24, 1fr);
   width: 100%;
-  height: 100%;
-  background: #1e293b;
+  aspect-ratio: 1/1;
+  background: #fef3c7; /* Cream fills every cell gap */
   position: relative;
+  border: 6px solid #7a2e2e;
 }
 
 .tile {
-  border: 0.5px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
-.tile.reachable {
-  background: rgba(251, 191, 36, 0.2);
-  cursor: pointer;
-  box-shadow: inset 0 0 10px var(--primary);
-}
-
-.tile.reachable:hover {
-  background: rgba(251, 191, 36, 0.4);
+.hallway-tile {
+  background: #fef3c7;
+  border: 1px solid rgba(122, 46, 46, 0.15);
 }
 
 .room-tile {
-  border: none;
+  background: #d8c98d;
+  border: 1px solid rgba(122, 46, 46, 0.15);
+}
+
+.starting-spot {
+  /* No visual styling for starting spots to keep hallways clean */
+}
+
+.tile.reachable {
+  background: rgba(251, 191, 36, 0.6);
+  cursor: pointer;
+  box-shadow: inset 0 0 5px #d97706;
+}
+
+.tile.reachable:hover {
+  background: rgba(251, 191, 36, 0.9);
+}
+
+.room-overlay {
+  background: #d8c98d;
+  border: 4px solid #7a2e2e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .room-label {
-  position: absolute;
-  font-size: 8px;
-  font-weight: 900;
+  font-family: Georgia, serif;
+  font-size: clamp(0.5rem, 1.2vw, 0.95rem);
+  font-weight: 800;
+  color: #451a03;
   text-transform: uppercase;
-  color: white;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 10;
-  text-shadow: 1px 1px 2px black;
-  top: 5px;
-  left: 5px;
+  letter-spacing: 0.1em;
+  text-align: center;
+  background: transparent;
+  padding: 0;
+  border: none;
 }
 
 .token {
-  width: 90%;
-  height: 90%;
+  width: 80%;
+  height: 80%;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 14px;
   border: 2px solid white;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 -4px 6px rgba(0,0,0,0.3);
   z-index: 20;
-  opacity: 1 !important;
   animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -280,18 +299,48 @@ select {
 }
 
 .center-logo {
-  grid-area: 11 / 11 / 15 / 15;
-  background: #ef4444;
+  grid-column: 11 / 15;
+  grid-row: 10 / 16;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+  border: 4px solid #7a2e2e;
+}
+
+.clue-top {
+  flex: 1;
+  background: white;
   display: flex;
   justify-content: center;
   align-items: center;
+  font-family: 'Brush Script MT', 'Comic Sans MS', cursive;
+  font-size: 2.2rem;
   font-weight: 900;
-  color: white;
-  border: 4px solid #b45309;
-  border-radius: 8px;
-  z-index: 30;
-  transform: rotate(-10deg);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+  color: #451a03;
+  text-transform: capitalize;
+}
+
+.clue-bottom {
+  flex: 1.2;
+  background: #115e59;
+  border-top: 4px solid #7a2e2e;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.stairs {
+  width: 40%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    #0f3d3a,
+    #0f3d3a 4px,
+    #115e59 4px,
+    #115e59 8px
+  );
+  border-left: 2px solid #0a2927;
+  border-right: 2px solid #0a2927;
 }
 
 .dice-badge {
@@ -379,4 +428,36 @@ select {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+.suggestion-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.suggestion-modal {
+  background: var(--bg-card);
+  border: 2px solid var(--primary);
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.suggestion-modal h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.suggestion-modal p {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
 }
