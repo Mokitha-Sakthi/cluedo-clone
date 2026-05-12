@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoom, joinRoom, GameSocket } from './services';
-import { SUSPECTS, WEAPONS, ROOM_BOUNDARIES } from './constants';
+import { SUSPECTS, WEAPONS, ROOM_BOUNDARIES, STARTING_POSITIONS } from './constants';
 import './index.css';
 
 const SUSPECT_DATA = {
@@ -290,14 +290,18 @@ function App() {
             </span>
           </div>
 
-          <div className="board-container" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="board-container" style={{ padding: 0, overflow: 'hidden', borderRadius: '8px', background: '#115e59', border: '8px solid #0f3d3a' }}>
             <div className="tile-grid">
-              {Array.from({ length: 25 * 25 }).map((_, i) => {
-                const r = Math.floor(i / 25);
-                const c = i % 25;
+              {Array.from({ length: 24 * 24 }).map((_, i) => {
+                const r = Math.floor(i / 24);
+                const c = i % 24;
                 
                 const isRoom = Object.entries(ROOM_BOUNDARIES).find(([name, b]) => 
                   r >= b.top && r <= b.bottom && c >= b.left && c <= b.right
+                );
+
+                const startingSpot = Object.entries(STARTING_POSITIONS).find(([name, pos]) => 
+                  pos[0] === r && pos[1] === c
                 );
                 
                 // Check if any player is at this position
@@ -320,10 +324,7 @@ function App() {
                 return (
                   <div 
                     key={i} 
-                    className={`tile ${isRoom ? 'room-tile' : ''} ${isReachable ? 'reachable' : ''}`}
-                    style={{ 
-                      backgroundColor: isRoom ? `${isRoom[1].color}44` : 'transparent',
-                    }}
+                    className={`tile ${isRoom ? 'room-tile' : 'hallway-tile'} ${isReachable ? 'reachable' : ''}`}
                     onClick={() => isReachable && move([r, c])}
                   >
                     {playersHere.map(([uid, _]) => {
@@ -335,13 +336,30 @@ function App() {
                         </div>
                       );
                     })}
-                    {isRoom && (r === isRoom[1].top && c === isRoom[1].left) && (
-                      <span className="room-label">{isRoom[0]}</span>
-                    )}
                   </div>
                 );
               })}
-              <div className="center-logo">CLUE</div>
+
+              {/* Solid room block overlays — one div per room, perfectly covering the room cells */}
+              {Object.entries(ROOM_BOUNDARIES).map(([name, b]) => {
+                const width = (b.right - b.left + 1);
+                const height = (b.bottom - b.top + 1);
+                return (
+                  <div key={name} className="room-overlay" style={{
+                    gridColumn: `${b.left + 1} / span ${width}`,
+                    gridRow: `${b.top + 1} / span ${height}`,
+                  }}>
+                    <span className="room-label">{name}</span>
+                  </div>
+                );
+              })}
+
+              <div className="center-logo">
+                <div className="clue-top">Cluedo</div>
+                <div className="clue-bottom">
+                  <div className="stairs"></div>
+                </div>
+              </div>
             </div>
           </div>
 
