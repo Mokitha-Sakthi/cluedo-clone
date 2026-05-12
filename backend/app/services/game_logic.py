@@ -72,7 +72,7 @@ class GameLogic:
 
     @staticmethod
     def roll_dice() -> int:
-        return random.randint(1, 6)
+        return random.randint(1, 6) + random.randint(1, 6)
 
     @staticmethod
     def validate_suggestion(suggester: str, suspect: str, weapon: str, room: str, 
