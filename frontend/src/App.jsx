@@ -290,9 +290,8 @@ function App() {
             </span>
           </div>
 
-          <div className="board-container" style={{ padding: 0, overflow: 'hidden', borderRadius: '8px', background: '#115e59', border: '8px solid #0f3d3a' }}>
-            <div className="tile-grid">
-              {Array.from({ length: 24 * 24 }).map((_, i) => {
+          <div className="tile-grid">
+              {Array.from({ length: 24 * 23 }).map((_, i) => {
                 const r = Math.floor(i / 24);
                 const c = i % 24;
                 
@@ -360,7 +359,6 @@ function App() {
                   <div className="stairs"></div>
                 </div>
               </div>
-            </div>
           </div>
 
           <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>

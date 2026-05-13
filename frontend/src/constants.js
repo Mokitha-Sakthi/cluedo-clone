@@ -29,8 +29,8 @@ export const ROOMS = [
 ];
 
 export const STARTING_POSITIONS = {
-    "Miss Scarlett": [23, 8],
-    "Colonel Mustard": [23, 16],
+    "Miss Scarlett": [22, 8],
+    "Colonel Mustard": [22, 16],
     "Mrs. White": [0, 7],
     "Mr. Green": [0, 16],
     "Mrs. Peacock": [5, 23],
@@ -38,9 +38,9 @@ export const STARTING_POSITIONS = {
 };
 
 export const ROOM_BOUNDARIES = {
-    "Study": { top: 20, left: 17, bottom: 23, right: 23, color: "#e5e0d8" },
-    "Hall": { top: 17, left: 9, bottom: 23, right: 14, color: "#e5e0d8" },
-    "Lounge": { top: 18, left: 0, bottom: 23, right: 6, color: "#e5e0d8" },
+    "Study": { top: 19, left: 17, bottom: 22, right: 23, color: "#e5e0d8" },
+    "Hall": { top: 16, left: 9, bottom: 22, right: 14, color: "#e5e0d8" },
+    "Lounge": { top: 17, left: 0, bottom: 22, right: 6, color: "#e5e0d8" },
     "Library": { top: 13, left: 17, bottom: 17, right: 23, color: "#e5e0d8" },
     "Billiard Room": { top: 7, left: 18, bottom: 11, right: 23, color: "#e5e0d8" },
     "Dining Room": { top: 8, left: 0, bottom: 14, right: 8, color: "#e5e0d8" },

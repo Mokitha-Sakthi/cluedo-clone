@@ -31,8 +31,8 @@ ROOMS = [
 SUSPECT_NAMES = list(SUSPECTS.keys())
 
 STARTING_POSITIONS = {
-    "Miss Scarlett": (23, 8),
-    "Colonel Mustard": (23, 16),
+    "Miss Scarlett": (22, 8),
+    "Colonel Mustard": (22, 16),
     "Mrs. White": (0, 7),
     "Mr. Green": (0, 16),
     "Mrs. Peacock": (5, 23),
@@ -41,9 +41,9 @@ STARTING_POSITIONS = {
 
 # Room boundaries (top, left, bottom, right) inclusive
 ROOM_BOUNDARIES = {
-    "Study": (20, 17, 23, 23),
-    "Hall": (17, 9, 23, 14),
-    "Lounge": (18, 0, 23, 6),
+    "Study": (19, 17, 22, 23),
+    "Hall": (16, 9, 22, 14),
+    "Lounge": (17, 0, 22, 6),
     "Library": (13, 17, 17, 23),
     "Billiard Room": (7, 18, 11, 23),
     "Dining Room": (8, 0, 14, 8),

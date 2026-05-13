@@ -215,12 +215,13 @@ select {
 .tile-grid {
   display: grid;
   grid-template-columns: repeat(24, 1fr);
-  grid-template-rows: repeat(24, 1fr);
+  grid-template-rows: repeat(23, 1fr);
   width: 100%;
-  aspect-ratio: 1/1;
-  background: #fef3c7; /* Cream fills every cell gap */
+  aspect-ratio: 24 / 23;
+  background: #fef3c7;
   position: relative;
   border: 6px solid #7a2e2e;
+  overflow: hidden;
 }
 
 .tile {
