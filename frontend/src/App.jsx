@@ -275,7 +275,7 @@ function App() {
           <h2 className="envelope-text">Confidential Solution Hidden...</h2>
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'start' }}>
         <div className="card fade-in">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2>Detective Board</h2>
@@ -325,8 +325,9 @@ function App() {
                     key={i} 
                     className={`tile ${isRoom ? 'room-tile' : 'hallway-tile'} ${isReachable ? 'reachable' : ''}`}
                     onClick={() => isReachable && move([r, c])}
+                    style={{ gridColumn: c + 1, gridRow: r + 1 }}
                   >
-                    {playersHere.map(([uid, _]) => {
+                    {/* playersHere.map(([uid, _]) => {
                       const charName = gameState.game_data.player_characters[uid];
                       const info = SUSPECT_DATA[charName] || { icon: '🕵️', color: 'white' };
                       return (
@@ -334,7 +335,7 @@ function App() {
                           {info.icon}
                         </div>
                       );
-                    })}
+                    }) */}
                   </div>
                 );
               })}

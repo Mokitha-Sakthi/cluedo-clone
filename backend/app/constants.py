@@ -41,9 +41,9 @@ STARTING_POSITIONS = {
 
 # Room boundaries (top, left, bottom, right) inclusive
 ROOM_BOUNDARIES = {
-    "Study": (19, 17, 22, 23),
-    "Hall": (16, 9, 22, 14),
-    "Lounge": (17, 0, 22, 6),
+    "Study": (20, 17, 22, 23),
+    "Hall": (17, 9, 22, 14),
+    "Lounge": (18, 0, 22, 6),
     "Library": (13, 17, 17, 23),
     "Billiard Room": (7, 18, 11, 23),
     "Dining Room": (8, 0, 14, 8),
